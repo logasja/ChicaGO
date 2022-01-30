@@ -55,6 +55,10 @@ DNSServer dnsServer;
 #define NUMMATRIX (mw*mh)
 #define CHARWIDTH 6
 
+#define APIKEY "23e1ba9a803a4a769c6a2dd71ccc66b1"
+
+char* api_url = "https://lapi.transitchicago.com/api/1.0/ttarrivals.aspx?mapid=40380&max=5&outputType=JSON";
+
 CRGB matrixleds[NUMMATRIX];
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C   u8g2(U8G2_R0, 16, 15, 4);
@@ -64,8 +68,53 @@ ESPAsync_WiFiManager* wifiManager;
 FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(matrixleds, mw, mh, mw/8, 1, 
   NEO_MATRIX_TOP + NEO_MATRIX_RIGHT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG );
 
-const uint16_t colors[] = {
-  matrix->Color(255, 0, 0), matrix->Color(0, 255, 0), matrix->Color(0, 0, 255) };
+struct line {
+  uint16_t color;
+  char* rt;
+};
+
+const line lines[8] = {
+  // Red Line
+  {
+    matrix->Color(198, 12, 48),
+    "Red"
+  },
+  // Blue Line
+  {
+    matrix->Color(0, 161, 222),
+    "Blue"
+  },
+  // Brown Line
+  {
+    matrix->Color(98, 54, 27),
+    "Brown"
+  },
+  // Green Line
+  {
+    matrix->Color(0, 155, 58),
+    "Green"
+  },
+  // Orange Line
+  {
+    matrix->Color(249, 70, 28),
+    "Orange"
+  },
+  // Pink Line
+  {
+    matrix->Color(226, 126, 166),
+    "Pink"
+  },
+  // Purple Line
+  {
+    matrix->Color(82, 35, 152),
+    "Purple"
+  },
+  // Yellow Line
+  {
+    matrix->Color(249, 227, 0),
+    "Yellow"
+  },
+};
 
 void setup_oled(U8G2_SSD1306_128X64_NONAME_F_HW_I2C* u8g2) {
   // Initialize the graphics library.
@@ -107,11 +156,11 @@ void setup() {
 
   u8g2.sendBuffer();
 
-  FastLED.addLeds<WS2812B,PIN>(matrixleds, NUMMATRIX); 
+  FastLED.addLeds<WS2812B,PIN,GRB>(matrixleds, NUMMATRIX); 
   matrix->begin();
   matrix->setTextWrap(false);
-  matrix->setBrightness(40);
-  matrix->setTextColor(colors[0]);
+  matrix->setBrightness(20);
+  matrix->setTextColor(matrix->Color(255, 255, 255));
   matrix->setTextSize(1);
   matrix->setRotation(45);
 
@@ -125,14 +174,14 @@ const char* message = "UwU OwO";
 
 void loop() {
   matrix->fillScreen(0);
-  matrix->setCursor(x, 0);
+  matrix->setCursor(x, 1);
   matrix->print(F(message));
   len = strlen(message)*CHARWIDTH;
   if(--x < -len) {
     x = matrix->width();
-    if(++pass >= 3) pass = 0;
-    matrix->setTextColor(colors[pass]);
+    if(++pass >= 8) pass = 0;
   }
+  matrix->writeFastHLine(0, 0, 32, lines[pass].color);
   matrix->show();
   delay(100);
 
